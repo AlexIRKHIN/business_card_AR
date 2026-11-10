@@ -47,6 +47,7 @@ export async function loadConfig(url = 'config.json') {
  * @property {string} monogram
  * @property {string} accent    цвет акцента (#rrggbb)
  * @property {string} onAccent  цвет текста, читаемый на акценте
+ * @property {string} url       адрес опубликованного приложения для QR-кода (может быть пустым)
  * @property {Contact[]} contacts
  */
 export function normalizeConfig(raw) {
@@ -76,6 +77,7 @@ export function normalizeConfig(raw) {
     monogram: makeMonogram(name),
     accent,
     onAccent: contrastColor(accent),
+    url: /^https?:\/\/\S+$/i.test(text(raw.url)) ? text(raw.url) : '',
     contacts,
   };
 }

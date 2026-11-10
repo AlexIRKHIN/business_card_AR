@@ -11,7 +11,7 @@
 - [x] Каркас, загрузка конфига, стартовый экран, резервная панель контактов, vCard
 - [x] 3D-визитка в режиме предпросмотра (`?preview=1`)
 - [x] Анимации и нажатия на 3D-кнопки
-- [ ] Маркер и макет печатной визитки
+- [x] Маркер и макет печатной визитки
 - [ ] AR-режим (MindAR)
 
 ## Как сделать свою визитку
@@ -26,7 +26,8 @@
   "email": "xsx99@mail.ru",
   "telegram": "https://t.me/irhin21",
   "github": "https://github.com/AlexIRKHIN",
-  "theme": { "accent": "#4f8cff" }
+  "theme": { "accent": "#4f8cff" },
+  "url": "https://alexirkhin.github.io/business_card_AR/"
 }
 ```
 
@@ -34,6 +35,17 @@
 - Если контакт не указан или указан с ошибкой, его кнопка не показывается.
 - `telegram` и `github` можно писать ссылкой или именем пользователя (`@irhin21`, `AlexIRKHIN`).
 - `theme.accent` задаёт цвет оформления в формате `#rrggbb`.
+- `url` — адрес опубликованного приложения, он кодируется в QR-коде на печатной визитке.
+
+## Печатная визитка и маркер
+
+Лицевая сторона печатной визитки (90×50 мм) одновременно служит маркером для AR. Она строится из `config.json` генератором `tools/marker.html`:
+
+1. Запустить локальный сервер и открыть http://localhost:8000/tools/marker.html.
+2. Нажать «Скачать marker.png» и «Собрать targets.mind», положить оба файла в `assets/`.
+3. Распечатать лист А4 кнопкой «Печать листа А4» (в окне печати включить фон и масштаб 100 %) или показать `assets/marker.png` на экране.
+
+После изменения имени, роли, цвета или адреса маркер и файл трекинга нужно собрать заново. Готовые файлы для текущего конфига уже лежат в репозитории: `assets/marker.png`, `assets/targets.mind`, `print/card.pdf` (одна визитка), `print/sheet-a4.pdf` (десять на листе).
 
 ## Запуск на компьютере
 
@@ -65,8 +77,12 @@ js/interaction.js raycasting: нажатия на визитку и кнопки
 js/preview.js     режим предпросмотра без камеры
 js/vcard.js       формирование файла .vcf
 js/icons.js       иконки контактов
+tools/marker.html генератор печатной визитки, маркера и файла трекинга
 assets/fonts/     шрифт Inter
-vendor/           Three.js и MindAR
+assets/marker.png изображение-маркер (лицевая сторона печатной визитки)
+assets/targets.mind  файл трекинга MindAR, собранный из маркера
+print/            макеты для печати (PDF)
+vendor/           Three.js, MindAR, генератор QR-кодов
 ```
 
 ## Сторонние ресурсы
@@ -75,4 +91,5 @@ vendor/           Three.js и MindAR
 |---|---|---|
 | [Three.js](https://threejs.org/) | r160 | MIT |
 | [MindAR](https://github.com/hiukim/mind-ar-js) | 1.2.5 | MIT |
+| [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) | 2.0.4 | MIT |
 | [Inter](https://rsms.me/inter/) | 4.x (через @fontsource/inter 5.3.0) | SIL OFL 1.1 |

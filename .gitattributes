@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Файл трекинга MindAR и шрифты — двоичные, переводы строк не трогать
+*.mind binary
+*.woff2 binary
