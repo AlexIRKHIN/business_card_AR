@@ -17,8 +17,10 @@ const easeOutBack = (t) => 1 + 2.4 * (t - 1) ** 3 + 1.4 * (t - 1) ** 2;
  * Метод update(dt) нужно вызывать в каждом кадре.
  *
  * @param {Awaited<ReturnType<typeof import('./card.js').createCard>>} card
+ * @param {{ rise?: { y: number, z: number } }} [options]
+ *   rise — откуда визитка «выезжает» при появлении (смещение от конечного положения)
  */
-export function createCardAnimator(card) {
+export function createCardAnimator(card, { rise = { y: -0.28, z: 0 } } = {}) {
   const { rig, body, decor } = card;
   const [crystal, shell] = decor.children;
   const decorBaseY = decor.position.y;
@@ -41,7 +43,8 @@ export function createCardAnimator(card) {
     rig.scale.setScalar(Math.max(0.0001, easeOutBack(appearProgress)));
 
     // Парение (Ф4): плавное покачивание вверх-вниз и лёгкие наклоны
-    rig.position.y = -0.28 * remaining + Math.sin(time * 1.6) * 0.012;
+    rig.position.y = rise.y * remaining + Math.sin(time * 1.6) * 0.012;
+    rig.position.z = rise.z * remaining;
     rig.rotation.y = -Math.PI * 0.85 * remaining + Math.sin(time * 0.8) * 0.05;
     rig.rotation.x = Math.sin(time * 1.1) * 0.03;
 
