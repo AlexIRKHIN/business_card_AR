@@ -2,9 +2,11 @@
 // в кадре камеры и сообщает его положение. Визитка живёт в одном из двух
 // состояний:
 //   «на маркере» — следует за печатной визиткой (со сглаживанием);
-//   «в руке»     — закреплена в центре экрана и не зависит от маркера.
-// В руку визитка переходит по нажатию или при потере маркера, обратно —
-// по кнопке «Вернуть на визитку».
+//   «в руке»     — режим осмотра: закреплена в центре экрана, не зависит
+//                  от маркера и управляется жестами.
+// В руку визитка переходит по кнопке «Осмотреть визитку» или при потере
+// маркера, обратно — по кнопке «Вернуть на визитку». Сторона визитки
+// при переходах не меняется: нажатие всегда только переворачивает её.
 
 import * as THREE from 'three';
 import { MindARThree } from 'mindar-image-three';
@@ -222,16 +224,17 @@ export async function startAR(config, container, { onState, onFlip, onAction } =
     emitState();
   }
 
+  /** Переводит визитку в режим осмотра (Ф19). false — визитки на маркере нет. */
   function toHand() {
-    if (mode !== 'marker') return;
+    if (mode !== 'marker') return false;
     startTransition('hand');
+    return true;
   }
 
   /** Возвращает визитку на маркер (Ф21). false — маркера нет в кадре. */
   function toMarker() {
     if (mode !== 'hand' || !markerVisible) return false;
-    gestures.reset();
-    if (animator.isFlipped && animator.flip()) onFlip?.(false); // на маркере визитка лицом к зрителю
+    gestures.reset(); // поворот и масштаб от жестов плавно сбрасываются
     startTransition('marker');
     return true;
   }
@@ -291,13 +294,6 @@ export async function startAR(config, container, { onState, onFlip, onAction } =
     animator,
     config,
     isActive: () => mode !== 'scanning',
-    // На маркере нажатие берёт визитку в руку и сразу открывает контакты (Ф19)
-    onCardTap: () => {
-      if (mode !== 'marker') return false;
-      toHand();
-      if (!animator.isFlipped && animator.flip()) onFlip?.(true);
-      return true;
-    },
     onFlip,
     onAction,
   });
@@ -356,6 +352,8 @@ export async function startAR(config, container, { onState, onFlip, onAction } =
 
   emitState();
   return {
+    /** Переводит визитку в режим осмотра; false, если она не на маркере. */
+    inspect: toHand,
     /** Возвращает визитку на маркер; false, если маркера нет в кадре. */
     returnToMarker: toMarker,
     get mode() { return mode; },

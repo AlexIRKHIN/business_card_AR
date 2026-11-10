@@ -1,7 +1,7 @@
 // 2D-интерфейс поверх сцены: экраны, подсказки, ошибки и резервная
 // панель контактов (Ф13, Ф14, Ф15).
 
-import { createIcon } from './icons.js';
+import { createIcon, createGestureIcon } from './icons.js';
 import { downloadVCard } from './vcard.js';
 
 const $ = (id) => document.getElementById(id);
@@ -13,9 +13,9 @@ let toastTimer = 0;
 /**
  * Заполняет интерфейс данными конфига и навешивает обработчики.
  * @param {import('./config.js').CardConfig} config
- * @param {{ onStartCamera: () => void, onReturn: () => void }} handlers
+ * @param {{ onStartCamera: () => void, onModeButton: () => void, onHelpButton: () => void }} handlers
  */
-export function initUI(config, { onStartCamera, onReturn }) {
+export function initUI(config, { onStartCamera, onModeButton, onHelpButton }) {
   applyTheme(config);
   document.title = `${config.name} — AR-визитка`;
 
@@ -27,9 +27,11 @@ export function initUI(config, { onStartCamera, onReturn }) {
   $('sheet-name').textContent = config.name;
   $('sheet-role').textContent = config.role;
   renderContacts(config);
+  renderGestureHelp();
 
   $('btn-camera').addEventListener('click', onStartCamera);
-  $('btn-return').addEventListener('click', onReturn);
+  $('btn-mode').addEventListener('click', onModeButton);
+  $('btn-help').addEventListener('click', onHelpButton);
   $('btn-contacts').addEventListener('click', openContacts);
   $('fab-contacts').addEventListener('click', openContacts);
   $('btn-error-contacts').addEventListener('click', openContacts);
@@ -101,6 +103,35 @@ function renderContacts(config) {
   }
 }
 
+/** Жесты режима осмотра: иконка, название и пояснение (Ф20). */
+const TOUCH_GESTURES = [
+  { id: 'rotate', title: 'Вращение', text: 'ведите одним пальцем' },
+  { id: 'zoom', title: 'Масштаб', text: 'сводите и разводите два пальца' },
+  { id: 'pan', title: 'Перемещение', text: 'ведите двумя пальцами' },
+];
+/** На компьютере с мышью вместо касаний работают перетаскивание и колесо. */
+const MOUSE_GESTURES = [
+  { id: 'rotate', title: 'Вращение', text: 'тяните мышью' },
+  { id: 'zoom', title: 'Масштаб', text: 'крутите колесо мыши' },
+];
+
+function renderGestureHelp() {
+  const list = $('gesture-list');
+  list.replaceChildren();
+  const hasTouch = navigator.maxTouchPoints > 0;
+  for (const gesture of hasTouch ? TOUCH_GESTURES : MOUSE_GESTURES) {
+    const title = document.createElement('strong');
+    title.textContent = gesture.title;
+    const text = document.createElement('span');
+    text.textContent = gesture.text;
+    const textBox = document.createElement('div');
+    textBox.append(title, text);
+    const item = document.createElement('li');
+    item.append(createGestureIcon(gesture.id), textBox);
+    list.append(item);
+  }
+}
+
 /** Показывает один из экранов: 'loader', 'start', 'error' или null (только сцена). */
 export function showScreen(name) {
   for (const screen of document.querySelectorAll('.screen')) {
@@ -127,17 +158,44 @@ export function setHint(message) {
 export function setSceneControlsVisible(visible) {
   $('fab-contacts').hidden = !visible;
   $('btn-exit').hidden = !visible;
-  if (!visible) $('btn-return').hidden = true;
+  if (!visible) {
+    setModeButton('hidden');
+    setGestureHelp('hidden');
+  }
+}
+
+const MODE_BUTTON_TEXT = {
+  inspect: 'Осмотреть визитку',
+  return: '↩ Вернуть на визитку',
+  waiting: '↩ Вернуть на визитку',
+};
+
+/**
+ * Кнопка смены состояния визитки (Ф19, Ф21).
+ * @param {'hidden'|'inspect'|'return'|'waiting'} state
+ *   inspect — визитка на маркере, кнопка переводит её в режим осмотра;
+ *   return — визитка в руке, кнопка возвращает её на маркер;
+ *   waiting — то же, но маркера нет в кадре: кнопка приглушена
+ */
+export function setModeButton(state) {
+  const button = $('btn-mode');
+  button.hidden = state === 'hidden';
+  button.textContent = MODE_BUTTON_TEXT[state] ?? '';
+  button.classList.toggle('is-waiting', state === 'waiting');
 }
 
 /**
- * Кнопка «Вернуть на визитку» (Ф21).
- * @param {'hidden'|'ready'|'waiting'} state  waiting — маркера нет в кадре, кнопка приглушена
+ * Панель подсказок по жестам (Ф20).
+ * @param {'hidden'|'open'|'collapsed'} state  collapsed — видна только кнопка «?»
  */
-export function setReturnButton(state) {
-  const button = $('btn-return');
-  button.hidden = state === 'hidden';
-  button.classList.toggle('is-waiting', state === 'waiting');
+export function setGestureHelp(state) {
+  $('gesture-help').hidden = state !== 'open';
+  $('btn-help').hidden = state === 'hidden';
+  $('btn-help').setAttribute('aria-expanded', String(state === 'open'));
+}
+
+export function isGestureHelpOpen() {
+  return !$('gesture-help').hidden;
 }
 
 export function openContacts() {

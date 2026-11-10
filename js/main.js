@@ -8,21 +8,20 @@ const params = new URLSearchParams(location.search);
 
 const HINTS = {
   scan: 'Наведите камеру на визитку',
-  open: 'Нажмите на визитку, чтобы открыть контакты',
   flip: 'Нажмите на визитку, чтобы увидеть контакты',
-  gestures: 'Один палец — вращение, два — масштаб',
 };
-const GESTURE_HINT_TIME = 5000; // миллисекунд
+const GESTURE_HELP_TIME = 6000; // миллисекунд панель жестов видна, затем сворачивается в «?»
 
-/** Состояние сцены, от которого зависят подсказка и кнопка возврата. */
+/** Состояние сцены, от которого зависят подсказка и кнопка смены режима. */
 const sceneState = {
   mode: 'preview',       // 'preview' | 'scanning' | 'marker' | 'hand'
   markerVisible: false,
   flippedOnce: false,    // пользователь уже видел обратную сторону
-  gestureHintUntil: 0,   // до какого момента показывать подсказку про жесты
 };
 
-/** Запущенный AR-режим (нужен кнопке «Вернуть на визитку»). */
+let gestureHelpTimer = 0;
+
+/** Запущенный AR-режим (нужен кнопке смены состояния визитки). */
 let arSession = null;
 
 boot();
@@ -44,7 +43,8 @@ async function boot() {
 
   ui.initUI(config, {
     onStartCamera: () => startCamera(config),
-    onReturn: returnToMarker,
+    onModeButton: switchMode,
+    onHelpButton: toggleGestureHelp,
   });
 
   if (params.has('preview')) await startPreview(config);
@@ -112,43 +112,69 @@ function showScene() {
   ui.showScreen(null);
   ui.setSceneControlsVisible(true);
   refreshSceneUI();
+  // В предпросмотре жесты доступны сразу, в AR — после перехода в режим осмотра
+  if (sceneState.mode === 'preview' || sceneState.mode === 'hand') openGestureHelp();
 }
 
-/** Кнопка «Вернуть на визитку» (Ф21). */
-function returnToMarker() {
-  if (!arSession?.returnToMarker()) ui.showToast('Наведите камеру на печатную визитку, чтобы вернуть на неё 3D-визитку.');
+/** Кнопка под визиткой: «Осмотреть визитку» на маркере, «Вернуть на визитку» в руке (Ф19, Ф21). */
+function switchMode() {
+  if (sceneState.mode === 'marker') {
+    arSession?.inspect();
+  } else if (!arSession?.returnToMarker()) {
+    ui.showToast('Наведите камеру на печатную визитку, чтобы вернуть на неё 3D-визитку.');
+  }
 }
 
-/** Подсказка и кнопка возврата по состоянию сцены (Ф6, Ф14, Ф21). */
+/** Показывает панель жестов и через несколько секунд сворачивает её в кнопку «?» (Ф20). */
+function openGestureHelp() {
+  ui.setGestureHelp('open');
+  clearTimeout(gestureHelpTimer);
+  gestureHelpTimer = setTimeout(() => ui.setGestureHelp('collapsed'), GESTURE_HELP_TIME);
+}
+
+function toggleGestureHelp() {
+  if (ui.isGestureHelpOpen()) {
+    clearTimeout(gestureHelpTimer);
+    ui.setGestureHelp('collapsed');
+  } else {
+    openGestureHelp();
+  }
+}
+
+/** Подсказка и кнопка смены режима по состоянию сцены (Ф6, Ф14, Ф19, Ф21). */
 function refreshSceneUI() {
-  const { mode, markerVisible, flippedOnce, gestureHintUntil } = sceneState;
+  const { mode, markerVisible, flippedOnce } = sceneState;
 
   let hint = null;
   if (mode === 'scanning') hint = HINTS.scan;
-  else if (mode === 'marker') hint = HINTS.open;
   else if (!flippedOnce) hint = HINTS.flip;
-  else if (performance.now() < gestureHintUntil) hint = HINTS.gestures;
   ui.setHint(hint);
 
-  ui.setReturnButton(mode === 'hand' ? (markerVisible ? 'ready' : 'waiting') : 'hidden');
+  if (mode === 'marker') ui.setModeButton('inspect');
+  else if (mode === 'hand') ui.setModeButton(markerVisible ? 'return' : 'waiting');
+  else ui.setModeButton('hidden');
 }
 
 /** Реакция интерфейса на события 3D-визитки; общая для предпросмотра и AR. */
 function sceneHandlers() {
   return {
     onState({ mode, markerVisible }) {
+      const previousMode = sceneState.mode;
       sceneState.mode = mode;
       sceneState.markerVisible = markerVisible;
       refreshSceneUI();
+
+      // Панель жестов открывается при входе в режим осмотра и убирается на маркере
+      if (mode === 'hand' && previousMode !== 'hand') {
+        openGestureHelp();
+      } else if (mode !== 'hand') {
+        clearTimeout(gestureHelpTimer);
+        ui.setGestureHelp('hidden');
+      }
     },
     onFlip() {
-      // После первого переворота подсказка про оборот больше не нужна (Ф6);
-      // вместо неё на несколько секунд появляется подсказка про жесты
-      if (!sceneState.flippedOnce) {
-        sceneState.flippedOnce = true;
-        sceneState.gestureHintUntil = performance.now() + GESTURE_HINT_TIME;
-        setTimeout(refreshSceneUI, GESTURE_HINT_TIME + 50);
-      }
+      // После первого переворота подсказка про оборот больше не нужна (Ф6)
+      sceneState.flippedOnce = true;
       refreshSceneUI();
     },
     onAction(contact) {

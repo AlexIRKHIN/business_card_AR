@@ -59,8 +59,14 @@
   <!-- Кнопка резервной панели поверх камеры (Ф13) -->
   <button id="fab-contacts" class="fab" type="button" hidden>Контакты</button>
 
-  <!-- Возврат 3D-визитки из руки на маркер (Ф21) -->
-  <button id="btn-return" class="chip chip-center" type="button" hidden>↩ Вернуть на визитку</button>
+  <!-- Переход в режим осмотра и возврат на маркер (Ф19, Ф21) -->
+  <button id="btn-mode" class="chip chip-center" type="button" hidden></button>
+
+  <!-- Подсказки по жестам в режиме осмотра (Ф20) -->
+  <div id="gesture-help" class="gesture-help" hidden>
+    <ul id="gesture-list"></ul>
+  </div>
+  <button id="btn-help" class="help-btn" type="button" aria-label="Подсказки по жестам" aria-expanded="false" hidden>?</button>
 
   <!-- Выход из сцены на стартовый экран -->
   <a id="btn-exit" class="chip" href="./" hidden>← На главную</a>
