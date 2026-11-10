@@ -22,8 +22,9 @@ const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
  * @param {import('three').Object3D} options.target  объект, к которому применяются жесты
  * @param {() => boolean} [options.isEnabled]  false — жесты игнорируются
  * @param {() => number} options.pixelsPerUnit  ширина визитки на экране в пикселях (при масштабе 1)
+ * @param {boolean} [options.wheel]  false — колесо мыши не масштабирует (страница с прокруткой)
  */
-export function createGestures({ element, target, isEnabled = () => true, pixelsPerUnit }) {
+export function createGestures({ element, target, isEnabled = () => true, pixelsPerUnit, wheel = true }) {
   const goal = { yaw: 0, pitch: 0, zoom: 1, x: 0, y: 0 };
   const current = { ...goal };
   const pointers = new Map(); // активные касания: id → координаты
@@ -97,7 +98,7 @@ export function createGestures({ element, target, isEnabled = () => true, pixels
   element.addEventListener('pointerup', onPointerEnd);
   element.addEventListener('pointercancel', onPointerEnd);
   element.addEventListener('pointerleave', onPointerEnd);
-  element.addEventListener('wheel', onWheel, { passive: false });
+  if (wheel) element.addEventListener('wheel', onWheel, { passive: false });
   element.addEventListener('gesturestart', preventDefault);
   element.addEventListener('gesturechange', preventDefault);
 

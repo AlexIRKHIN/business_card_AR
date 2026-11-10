@@ -1,0 +1,159 @@
+/* Страница конструктора визитки. Базовые переменные и кнопки — из css/style.css. */
+
+html, body { height: auto; overflow: auto; }
+body { padding: 24px 20px 64px; }
+
+.page { max-width: 1120px; margin: 0 auto; display: grid; gap: 20px; }
+
+.page-header h1 { margin: 12px 0 6px; font-size: 28px; }
+.page-header p { margin: 0; max-width: 720px; color: var(--muted); }
+.page-header .link { margin: 0; }
+
+.layout { display: grid; gap: 20px; grid-template-columns: minmax(300px, 380px) 1fr; align-items: start; }
+.previews { display: grid; gap: 20px; min-width: 0; }
+
+.panel {
+  min-width: 0;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.panel h2 { margin: 0 0 14px; font-size: 18px; }
+
+/* ---------- Форма ---------- */
+.field { display: block; margin-bottom: 14px; }
+.field > span { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 600; }
+.field b { color: var(--accent); }
+.field input[type="text"], .field input[type="tel"], .field input[type="email"], .field input[type="url"] {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+}
+.field input::placeholder { color: var(--muted); opacity: 0.6; }
+.field small { display: block; min-height: 18px; margin-top: 4px; font-size: 12.5px; color: var(--muted); overflow-wrap: anywhere; }
+.field.is-ok small { color: #5fd08a; }
+.field.is-warning small { color: #f0b657; }
+.field.is-error small { color: var(--danger); }
+.field.is-error input { border-color: var(--danger); }
+
+.accent-row { display: flex; align-items: center; gap: 12px; }
+.accent-row input[type="color"] {
+  width: 46px; height: 46px;
+  flex: none;
+  padding: 3px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  cursor: pointer;
+}
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.swatches button {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  outline: 1px solid var(--line);
+  cursor: pointer;
+}
+.swatches button.is-current { border-color: var(--text); }
+
+/* ---------- Предпросмотр ---------- */
+.viewer {
+  aspect-ratio: 16 / 10;
+  max-height: 420px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(90% 60% at 50% 45%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 75%),
+    linear-gradient(var(--line) 1px, transparent 1px) 0 0 / 100% 32px,
+    linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 32px 100%,
+    var(--bg);
+  touch-action: none;
+  cursor: grab;
+}
+.viewer:active { cursor: grabbing; }
+.viewer canvas { display: block; }
+
+#marker-canvas {
+  display: block;
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+}
+.note { margin: 10px 0 0; font-size: 13px; color: var(--muted); }
+code { color: var(--text); background: var(--surface-2); padding: 1px 6px; border-radius: 6px; }
+
+/* ---------- Файлы ---------- */
+.status { margin: 0 0 14px; }
+.status.is-error { color: var(--danger); }
+.files { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: file; }
+.files li {
+  counter-increment: file;
+  display: grid;
+  grid-template-columns: 34px 1fr minmax(200px, 240px);
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+}
+.files li::before {
+  content: counter(file);
+  width: 34px; height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
+  font-weight: 700;
+}
+.files li.is-done::before { content: "✓"; background: #5fd08a; color: #0b0f17; }
+.files li div { min-width: 0; display: flex; flex-direction: column; }
+.files li span { font-size: 13px; color: var(--muted); }
+.files .btn { min-height: 44px; padding: 8px 14px; }
+
+.json { margin-top: 16px; }
+.json summary { cursor: pointer; color: var(--muted); font-size: 14px; }
+.json pre {
+  margin: 10px 0 0;
+  padding: 14px;
+  overflow-x: auto;
+  border-radius: 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.print-sheet { display: none; }
+
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 1fr; }
+  .files li { grid-template-columns: 34px 1fr; }
+  .files .btn { grid-column: 1 / -1; }
+}
+
+@page { size: A4 portrait; margin: 10mm 15mm; }
+@media print {
+  html, body { background: #fff; padding: 0; }
+  .page { display: none; }
+  /* Десять визиток 90×50 мм, пунктир — линии реза */
+  .print-sheet { display: grid; grid-template-columns: repeat(2, 90mm); justify-content: center; }
+  .print-sheet img {
+    width: 90mm;
+    height: 50mm;
+    display: block;
+    outline: 0.2mm dashed #999;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

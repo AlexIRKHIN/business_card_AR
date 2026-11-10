@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Конструктор AR-визитки</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="constructor.css">
+
+  <!-- Те же библиотеки, что и в приложении: 3D-визитка в предпросмотре строится тем же кодом. -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "../vendor/three/three.module.min.js"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div class="page">
+    <header class="page-header">
+      <a class="link" href="../">← К визитке</a>
+      <h1>Конструктор AR-визитки</h1>
+      <p>Заполните данные, проверьте визитку в предпросмотре и скачайте три файла. Останется положить их в свой репозиторий — код менять не нужно.</p>
+    </header>
+
+    <div class="layout">
+      <!-- Форма с данными визитки (поля config.json) -->
+      <form id="form" class="panel" autocomplete="off" novalidate>
+        <h2>Данные визитки</h2>
+
+        <label class="field" data-field="name">
+          <span>Имя и фамилия <b>*</b></span>
+          <input id="f-name" type="text" maxlength="60" placeholder="Александр Ирхин">
+          <small></small>
+        </label>
+        <label class="field" data-field="role">
+          <span>Должность или роль</span>
+          <input id="f-role" type="text" maxlength="60" placeholder="Системный аналитик">
+          <small></small>
+        </label>
+        <label class="field" data-field="phone">
+          <span>Телефон</span>
+          <input id="f-phone" type="tel" maxlength="30" placeholder="+7 900 000-00-00">
+          <small></small>
+        </label>
+        <label class="field" data-field="email">
+          <span>Электронная почта</span>
+          <input id="f-email" type="email" maxlength="80" placeholder="name@example.com" spellcheck="false">
+          <small></small>
+        </label>
+        <label class="field" data-field="telegram">
+          <span>Telegram</span>
+          <input id="f-telegram" type="text" maxlength="80" placeholder="@username или ссылка" spellcheck="false">
+          <small></small>
+        </label>
+        <label class="field" data-field="github">
+          <span>GitHub</span>
+          <input id="f-github" type="text" maxlength="80" placeholder="username или ссылка" spellcheck="false">
+          <small></small>
+        </label>
+
+        <div class="field" data-field="accent">
+          <span>Цвет оформления</span>
+          <div class="accent-row">
+            <input id="f-accent" type="color" aria-label="Свой цвет">
+            <div id="swatches" class="swatches"></div>
+          </div>
+          <small></small>
+        </div>
+
+        <label class="field" data-field="url">
+          <span>Адрес опубликованной визитки</span>
+          <input id="f-url" type="url" maxlength="200" placeholder="https://логин.github.io/репозиторий/" spellcheck="false">
+          <small></small>
+        </label>
+
+        <button id="btn-reset" class="btn btn-ghost" type="button">Вернуть данные из config.json</button>
+      </form>
+
+      <div class="previews">
+        <section class="panel">
+          <h2>3D-визитка</h2>
+          <div id="viewer" class="viewer"></div>
+          <p class="note">Тяните, чтобы повернуть; нажмите, чтобы перевернуть. Кнопки на обороте работают по-настоящему.</p>
+        </section>
+
+        <section class="panel">
+          <h2>Печатная визитка, она же маркер</h2>
+          <canvas id="marker-canvas"></canvas>
+          <p class="note">90×50 мм. Камера узнаёт визитку по всей лицевой стороне, поэтому после любого изменения данных маркер и файл трекинга нужно скачать заново.</p>
+        </section>
+      </div>
+    </div>
+
+    <section class="panel">
+      <h2>Файлы для репозитория</h2>
+      <p id="status" class="status" role="status">Загрузка…</p>
+      <ol class="files">
+        <li data-file="config">
+          <div><strong>config.json</strong><span>данные визитки — в корень репозитория</span></div>
+          <button id="btn-config" class="btn btn-primary" type="button">Скачать config.json</button>
+        </li>
+        <li data-file="marker">
+          <div><strong>marker.png</strong><span>изображение-маркер — в папку <code>assets</code></span></div>
+          <button id="btn-png" class="btn btn-primary" type="button">Скачать marker.png</button>
+        </li>
+        <li data-file="mind">
+          <div><strong>targets.mind</strong><span>файл трекинга, сборка до минуты — в папку <code>assets</code></span></div>
+          <button id="btn-mind" class="btn btn-primary" type="button">Собрать targets.mind</button>
+        </li>
+        <li data-file="print">
+          <div><strong>Лист А4</strong><span>десять визиток; в окне печати включите «Фон» и масштаб 100 %</span></div>
+          <button id="btn-print" class="btn btn-ghost" type="button">Печать листа А4</button>
+        </li>
+      </ol>
+      <p class="note">Замените три файла в репозитории, сделайте коммит и пуш. GitHub Pages обновит сайт за одну-две минуты.</p>
+
+      <details class="json">
+        <summary>Показать содержимое config.json</summary>
+        <pre id="json-preview"></pre>
+      </details>
+    </section>
+  </div>
+
+  <!-- Лист для печати: виден только при печати -->
+  <div id="sheet" class="print-sheet" aria-hidden="true"></div>
+
+  <script type="module" src="constructor.js"></script>
+</body>
+</html>

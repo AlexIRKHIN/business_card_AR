@@ -17,20 +17,23 @@ const easeOutBack = (t) => 1 + 2.4 * (t - 1) ** 3 + 1.4 * (t - 1) ** 2;
  * Метод update(dt) нужно вызывать в каждом кадре.
  *
  * @param {Awaited<ReturnType<typeof import('./card.js').createCard>>} card
- * @param {{ rise?: { y: number, z: number } }} [options]
- *   rise — откуда визитка «выезжает» при появлении (смещение от конечного положения)
+ * @param {{ rise?: { y: number, z: number }, appeared?: boolean, flipped?: boolean }} [options]
+ *   rise — откуда визитка «выезжает» при появлении (смещение от конечного положения);
+ *   appeared — визитка показывается сразу, без анимации появления;
+ *   flipped — визитка сразу повёрнута обратной стороной
+ *   (два последних нужны конструктору, который пересобирает визитку при вводе)
  */
-export function createCardAnimator(card, { rise = { y: -0.28, z: 0 } } = {}) {
+export function createCardAnimator(card, { rise = { y: -0.28, z: 0 }, appeared = false, flipped: startFlipped = false } = {}) {
   const { rig, body, decor } = card;
   const [crystal, shell] = decor.children;
   const decorBaseY = decor.position.y;
 
   let time = 0;
-  let appearProgress = 0;   // 0 — визитки нет, 1 — полностью появилась
+  let appearProgress = appeared ? 1 : 0; // 0 — визитки нет, 1 — полностью появилась
   let flipProgress = 1;     // 1 — переворот завершён
-  let flipFrom = 0;
-  let flipTo = 0;
-  let flipped = false;
+  let flipFrom = startFlipped ? Math.PI : 0;
+  let flipTo = flipFrom;
+  let flipped = startFlipped;
 
   rig.scale.setScalar(0.0001);
 

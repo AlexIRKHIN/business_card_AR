@@ -9,6 +9,7 @@ import { createInteraction } from './interaction.js';
 import { createGestures } from './gestures.js';
 
 const FOV = 40;
+const SHIFT_UP = 0.06; // на вертикальном экране визитка чуть выше центра: внизу кнопки и подсказки
 
 /**
  * Запускает предпросмотр в указанном контейнере.
@@ -29,7 +30,9 @@ export async function startPreview(config, container, { onFlip, onAction } = {})
   const card = await createCard(config, { anisotropy: renderer.capabilities.getMaxAnisotropy() });
   const gestureGroup = new THREE.Group(); // поворот, масштаб и сдвиг от жестов
   gestureGroup.add(card.group);
-  scene.add(gestureGroup);
+  const holder = new THREE.Group(); // положение визитки на экране
+  holder.add(gestureGroup);
+  scene.add(holder);
 
   let cardWidthPixels = 1;
 
@@ -47,6 +50,7 @@ export async function startPreview(config, container, { onFlip, onAction } = {})
     const distance = Math.max(fitHeight, fitWidth);
     camera.position.set(0, 0, distance);
     cardWidthPixels = (CARD_W * height) / (2 * distance * halfTan);
+    holder.position.y = height > width ? (height * SHIFT_UP) / cardWidthPixels : 0;
   }
   resize();
   window.addEventListener('resize', resize);
