@@ -1,6 +1,9 @@
 /* Страница конструктора визитки. Базовые переменные и кнопки — из css/style.css. */
 
-html, body { height: auto; overflow: auto; }
+/* В приложении прокрутка страницы отключена (сцена на весь экран); здесь она нужна.
+   Прокручивается сам документ: если сделать областью прокрутки ещё и body,
+   колесо мыши и свайпы «застревают» в нём из-за overscroll-behavior: none. */
+html, body { height: auto; overflow: visible; overscroll-behavior: auto; }
 body { padding: 24px 20px 64px; }
 
 .page { max-width: 1120px; margin: 0 auto; display: grid; gap: 20px; }
@@ -75,7 +78,7 @@ body { padding: 24px 20px 64px; }
     linear-gradient(var(--line) 1px, transparent 1px) 0 0 / 100% 32px,
     linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 32px 100%,
     var(--bg);
-  touch-action: none;
+  touch-action: pan-y; /* вертикальный свайп листает страницу, горизонтальный вращает визитку */
   cursor: grab;
 }
 .viewer:active { cursor: grabbing; }

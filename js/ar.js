@@ -136,8 +136,9 @@ function copyPose(target, source) {
  */
 export async function startAR(config, container, { onState, onFlip, onAction } = {}) {
   // Файл трекинга проверяется заранее: если его нет, MindAR не сообщает
-  // об ошибке, а запуск просто не завершается.
-  const targetResponse = await fetch(TARGET_SRC).catch(() => null);
+  // об ошибке, а запуск просто не завершается. Запрашивается только
+  // заголовок (HEAD), чтобы не скачивать файл дважды.
+  const targetResponse = await fetch(TARGET_SRC, { method: 'HEAD' }).catch(() => null);
   if (!targetResponse?.ok) throw new ARError('Не удалось запустить AR', TRACKING_ERROR);
 
   const ar = new MindARThree({
