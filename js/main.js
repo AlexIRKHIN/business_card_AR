@@ -5,7 +5,14 @@ import { loadConfig, ConfigError } from './config.js';
 import * as ui from './ui.js';
 
 const params = new URLSearchParams(location.search);
+const SCAN_HINT = 'Наведите камеру на визитку';
 const FLIP_HINT = 'Нажмите на визитку, чтобы увидеть контакты';
+
+/** Состояние сцены, от которого зависит подсказка на экране. */
+const sceneState = {
+  tracking: true,      // маркер в кадре (в предпросмотре всегда true)
+  flippedOnce: false,  // пользователь уже переворачивал визитку
+};
 
 boot();
 
@@ -44,6 +51,7 @@ function findCameraProblem() {
   return null;
 }
 
+/** AR-режим (Ф1): модули MindAR и Three.js загружаются только по нажатию кнопки. */
 async function startCamera(config) {
   const problem = findCameraProblem();
   if (problem) {
@@ -51,9 +59,21 @@ async function startCamera(config) {
     return;
   }
 
-  // Часть 5 плана: здесь подключается модуль ar.js (MindAR), запрашивается
-  // доступ к камере и 3D-визитка привязывается к маркеру.
-  ui.showToast('AR-режим появится на следующих этапах разработки. Пока доступны контакты без камеры.');
+  ui.setCameraButtonBusy(true);
+  try {
+    const { startAR } = await import('./ar.js');
+    sceneState.tracking = false;
+    await startAR(config, document.getElementById('ar-container'), sceneHandlers());
+  } catch (error) {
+    console.error(error);
+    ui.setCameraButtonBusy(false);
+    ui.showError(
+      error.title ?? 'Не удалось запустить AR',
+      `${error.title ? error.message : 'Не получилось загрузить модули дополненной реальности. Проверьте подключение к интернету.'} Контакты можно посмотреть и без камеры.`,
+    );
+    return;
+  }
+  showScene();
 }
 
 /** Режим предпросмотра без камеры (Ф16). Модули 3D загружаются только здесь. */
@@ -70,20 +90,38 @@ async function startPreview(config) {
     );
     return;
   }
+  showScene();
+}
+
+/** Убирает экраны и показывает элементы управления поверх сцены. */
+function showScene() {
   ui.showScreen(null);
   ui.setSceneControlsVisible(true);
-  ui.setHint(FLIP_HINT);
+  refreshHint();
+}
+
+/** Подсказка по состоянию сцены (Ф6, Ф14). */
+function refreshHint() {
+  if (!sceneState.tracking) ui.setHint(SCAN_HINT);
+  else if (!sceneState.flippedOnce) ui.setHint(FLIP_HINT);
+  else ui.setHint(null);
 }
 
 /** Реакция интерфейса на события 3D-визитки; общая для предпросмотра и AR. */
 function sceneHandlers() {
-  let flippedOnce = false;
   return {
+    onTargetFound() {
+      sceneState.tracking = true;
+      refreshHint();
+    },
+    onTargetLost() {
+      sceneState.tracking = false;
+      refreshHint();
+    },
     onFlip() {
       // Подсказка про оборот нужна только до первого переворота (Ф6)
-      if (flippedOnce) return;
-      flippedOnce = true;
-      ui.setHint(null);
+      sceneState.flippedOnce = true;
+      refreshHint();
     },
     onAction(contact) {
       if (contact.id === 'vcard') ui.showToast(ui.VCARD_TOAST);
