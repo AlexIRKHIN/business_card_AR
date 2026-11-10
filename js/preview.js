@@ -1,9 +1,12 @@
 // Режим предпросмотра (Ф16): та же 3D-визитка в обычной сцене Three.js,
-// без камеры и маркера. Визитку можно вращать мышью или пальцем.
+// без камеры и маркера. Визитку можно вращать мышью или пальцем,
+// анимации и нажатия работают так же, как в AR.
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createCard, createLights, CARD_W, CARD_H } from './card.js';
+import { createCardAnimator } from './animations.js';
+import { createInteraction } from './interaction.js';
 
 const FOV = 40;
 
@@ -11,8 +14,9 @@ const FOV = 40;
  * Запускает предпросмотр в указанном контейнере.
  * @param {import('./config.js').CardConfig} config
  * @param {HTMLElement} container
+ * @param {{ onFlip?: (flipped: boolean) => void, onAction?: (contact: object) => void }} [handlers]
  */
-export async function startPreview(config, container) {
+export async function startPreview(config, container, { onFlip, onAction } = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   container.classList.add('is-preview');
@@ -55,10 +59,17 @@ export async function startPreview(config, container) {
   resize();
   window.addEventListener('resize', resize);
 
+  const animator = createCardAnimator(card);
+  const interaction = createInteraction({ element: container, camera, card, animator, config, onFlip, onAction });
+  animator.appear();
+
+  const clock = new THREE.Clock();
   renderer.setAnimationLoop(() => {
+    // Ограничение шага: после сворачивания вкладки анимация не «прыгает»
+    animator.update(Math.min(clock.getDelta(), 0.1));
     controls.update();
     renderer.render(scene, camera);
   });
 
-  return { renderer, scene, camera, controls, card };
+  return { renderer, scene, camera, controls, card, animator, interaction };
 }

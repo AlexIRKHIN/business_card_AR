@@ -51,8 +51,11 @@ function createCanvasTexture(canvas, anisotropy) {
 /**
  * Создаёт 3D-визитку по конфигу.
  *
- * Иерархия: group (вся визитка) → body (корпус и грани, переворачивается)
- *                                → decor (декоративная фигура, не переворачивается)
+ * Иерархия:
+ *   group — вся визитка; её положение задаёт режим (предпросмотр или AR)
+ *     rig — слой анимаций появления и парения
+ *       body  — корпус и грани, переворачивается на 180°
+ *       decor — декоративная фигура, не переворачивается
  *
  * @param {import('./config.js').CardConfig} config
  * @param {{ anisotropy?: number }} [options]
@@ -62,9 +65,12 @@ export async function createCard(config, { anisotropy = 4 } = {}) {
 
   const group = new THREE.Group();
   group.name = 'card';
+  const rig = new THREE.Group();
+  rig.name = 'card-rig';
+  group.add(rig);
   const body = new THREE.Group();
   body.name = 'card-body';
-  group.add(body);
+  rig.add(body);
 
   // Корпус: выдавленный скруглённый прямоугольник, торцы цвета акцента
   const shape = roundedRectShape(CARD_W, CARD_H, CARD_R);
@@ -128,12 +134,13 @@ export async function createCard(config, { anisotropy = 4 } = {}) {
 
   const decor = createDecor(config.accent);
   decor.position.set(CARD_W * 0.4, CARD_H * 0.62, 0.1);
-  group.add(decor);
+  rig.add(decor);
 
   let highlighted = null;
 
   return {
     group,
+    rig,
     body,
     front,
     back,

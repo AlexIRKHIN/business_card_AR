@@ -5,6 +5,7 @@ import { loadConfig, ConfigError } from './config.js';
 import * as ui from './ui.js';
 
 const params = new URLSearchParams(location.search);
+const FLIP_HINT = 'Нажмите на визитку, чтобы увидеть контакты';
 
 boot();
 
@@ -60,7 +61,7 @@ async function startPreview(config) {
   ui.showScreen('loader');
   try {
     const { startPreview: run } = await import('./preview.js');
-    await run(config, document.getElementById('ar-container'));
+    await run(config, document.getElementById('ar-container'), sceneHandlers());
   } catch (error) {
     console.error(error);
     ui.showError(
@@ -71,5 +72,21 @@ async function startPreview(config) {
   }
   ui.showScreen(null);
   ui.setSceneControlsVisible(true);
-  ui.setHint('Потяните, чтобы повернуть визитку');
+  ui.setHint(FLIP_HINT);
+}
+
+/** Реакция интерфейса на события 3D-визитки; общая для предпросмотра и AR. */
+function sceneHandlers() {
+  let flippedOnce = false;
+  return {
+    onFlip() {
+      // Подсказка про оборот нужна только до первого переворота (Ф6)
+      if (flippedOnce) return;
+      flippedOnce = true;
+      ui.setHint(null);
+    },
+    onAction(contact) {
+      if (contact.id === 'vcard') ui.showToast(ui.VCARD_TOAST);
+    },
+  };
 }

@@ -6,6 +6,8 @@ import { downloadVCard } from './vcard.js';
 
 const $ = (id) => document.getElementById(id);
 
+export const VCARD_TOAST = 'Файл контакта сохранён. Откройте его, чтобы добавить в телефонную книгу.';
+
 let toastTimer = 0;
 
 /**
@@ -73,7 +75,7 @@ function renderContacts(config) {
       element.classList.add('contact-accent');
       element.addEventListener('click', () => {
         downloadVCard(config);
-        showToast('Файл контакта сохранён. Откройте его, чтобы добавить в телефонную книгу.');
+        showToast(VCARD_TOAST);
       });
     }
 
