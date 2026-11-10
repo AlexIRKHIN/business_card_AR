@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0f17">
+  <meta name="description" content="AR-визитка: наведите камеру на печатную визитку и увидите её 3D-версию с контактами.">
+  <title>AR-визитка</title>
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Библиотеки лежат в репозитории (vendor/), сторонние CDN не используются. -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./vendor/three/three.module.min.js",
+      "three/addons/": "./vendor/three/addons/",
+      "mindar-image-three": "./vendor/mindar/mindar-image-three.prod.js"
+    }
+  }
+  </script>
+</head>
+<body>
+  <!-- Сюда MindAR и Three.js выводят видео с камеры и 3D-сцену (части 2 и 5 плана). -->
+  <div id="ar-container" aria-hidden="true"></div>
+
+  <!-- Экран загрузки -->
+  <div id="screen-loader" class="screen is-active">
+    <div class="spinner" aria-hidden="true"></div>
+    <p>Загрузка визитки…</p>
+  </div>
+
+  <!-- Стартовый экран (Ф15) -->
+  <main id="screen-start" class="screen">
+    <div class="start-card">
+      <div class="monogram" id="start-monogram" aria-hidden="true"></div>
+      <h1 id="start-name"></h1>
+      <p class="role" id="start-role"></p>
+      <p class="lead">Наведите камеру на печатную визитку, и&nbsp;над ней появится её 3D-версия с&nbsp;контактами.</p>
+      <button id="btn-camera" class="btn btn-primary" type="button">Запустить камеру</button>
+      <button id="btn-contacts" class="btn btn-ghost" type="button">Показать контакты без камеры</button>
+      <a id="link-preview" class="link" href="?preview=1">Посмотреть 3D-визитку без камеры</a>
+    </div>
+  </main>
+
+  <!-- Экран ошибки (Ф14, Ф17) -->
+  <section id="screen-error" class="screen" role="alert">
+    <div class="start-card">
+      <div class="error-icon" aria-hidden="true">!</div>
+      <h2 id="error-title"></h2>
+      <p class="lead" id="error-text"></p>
+      <button id="btn-error-contacts" class="btn btn-primary" type="button" hidden>Показать контакты</button>
+      <button id="btn-error-retry" class="btn btn-ghost" type="button">Попробовать снова</button>
+    </div>
+  </section>
+
+  <!-- Подсказка поверх камеры (Ф14) -->
+  <div id="hint" class="hint" role="status" hidden></div>
+
+  <!-- Кнопка резервной панели поверх камеры (Ф13) -->
+  <button id="fab-contacts" class="fab" type="button" hidden>Контакты</button>
+
+  <!-- Резервная 2D-панель контактов (Ф13) -->
+  <div id="sheet-backdrop" class="sheet-backdrop" hidden></div>
+  <aside id="contacts-sheet" class="sheet" aria-hidden="true" aria-label="Контакты">
+    <div class="sheet-grip" aria-hidden="true"></div>
+    <header class="sheet-header">
+      <div class="monogram monogram-small" id="sheet-monogram" aria-hidden="true"></div>
+      <div class="sheet-title">
+        <strong id="sheet-name"></strong>
+        <span id="sheet-role"></span>
+      </div>
+      <button id="btn-sheet-close" class="icon-btn" type="button" aria-label="Закрыть">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </header>
+    <ul id="contacts-list" class="contacts-list"></ul>
+  </aside>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <noscript>
+    <div class="noscript">Для работы AR-визитки нужен включённый JavaScript.</div>
+  </noscript>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
