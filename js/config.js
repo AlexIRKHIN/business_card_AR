@@ -110,9 +110,13 @@ function contrastColor(hex) {
 
 function phoneContact(value) {
   const display = text(value);
+  // В номере допустимы только цифры, пробелы, скобки, дефисы, точки и плюс
+  // в начале; буквы и другие знаки означают, что это не номер.
+  if (!/^\+?[\d\s().-]+$/.test(display)) return null;
   // Для tel: и vCard оставляем только цифры и ведущий плюс.
-  const digits = display.replace(/[^\d+]/g, '').replace(/(?!^)\+/g, '');
-  if (digits.replace('+', '').length < 5) return null;
+  const digits = display.replace(/[^\d+]/g, '');
+  const count = digits.replace('+', '').length;
+  if (count < 5 || count > 15) return null; // 15 цифр — предел международного формата E.164
   return { id: 'phone', label: 'Позвонить', display, value: digits, href: `tel:${digits}` };
 }
 
