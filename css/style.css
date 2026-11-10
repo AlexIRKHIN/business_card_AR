@@ -80,6 +80,7 @@ html, body {
 }
 #ar-container.is-preview:active { cursor: grabbing; }
 #ar-container canvas { display: block; }
+#ar-container.is-ar { background: #000; }
 
 /* ---------- Экраны ---------- */
 .screen {
