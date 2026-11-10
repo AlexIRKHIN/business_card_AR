@@ -80,7 +80,7 @@ html, body {
 }
 #ar-container.is-preview:active { cursor: grabbing; }
 #ar-container canvas { display: block; }
-#ar-container.is-ar { background: #000; }
+#ar-container.is-ar { background: #000; touch-action: none; }
 
 /* ---------- Экраны ---------- */
 .screen {
@@ -217,6 +217,7 @@ h2 { font-size: 22px; }
 
 /* ---------- Подсказка поверх камеры ---------- */
 .hint {
+  pointer-events: none;
   position: fixed;
   z-index: 20;
   left: 50%;
@@ -270,6 +271,16 @@ h2 { font-size: 22px; }
   font-size: 15px;
   text-decoration: none;
 }
+
+button.chip { font-family: inherit; cursor: pointer; }
+.chip-center {
+  left: 50%;
+  bottom: calc(78px + var(--safe-bottom));
+  transform: translateX(-50%);
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+.chip-center.is-waiting { opacity: 0.55; }
 
 /* ---------- Резервная панель контактов ---------- */
 .sheet-backdrop {
@@ -381,10 +392,11 @@ svg path { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: 
 
 /* ---------- Всплывающее сообщение ---------- */
 .toast {
+  pointer-events: none;
   position: fixed;
   z-index: 40;
   left: 50%;
-  bottom: calc(84px + var(--safe-bottom));
+  bottom: calc(140px + var(--safe-bottom));
   transform: translateX(-50%);
   max-width: calc(100% - 32px);
   padding: 12px 18px;

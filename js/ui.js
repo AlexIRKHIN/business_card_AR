@@ -13,9 +13,9 @@ let toastTimer = 0;
 /**
  * Заполняет интерфейс данными конфига и навешивает обработчики.
  * @param {import('./config.js').CardConfig} config
- * @param {{ onStartCamera: () => void }} handlers
+ * @param {{ onStartCamera: () => void, onReturn: () => void }} handlers
  */
-export function initUI(config, { onStartCamera }) {
+export function initUI(config, { onStartCamera, onReturn }) {
   applyTheme(config);
   document.title = `${config.name} — AR-визитка`;
 
@@ -29,6 +29,7 @@ export function initUI(config, { onStartCamera }) {
   renderContacts(config);
 
   $('btn-camera').addEventListener('click', onStartCamera);
+  $('btn-return').addEventListener('click', onReturn);
   $('btn-contacts').addEventListener('click', openContacts);
   $('fab-contacts').addEventListener('click', openContacts);
   $('btn-error-contacts').addEventListener('click', openContacts);
@@ -126,6 +127,17 @@ export function setHint(message) {
 export function setSceneControlsVisible(visible) {
   $('fab-contacts').hidden = !visible;
   $('btn-exit').hidden = !visible;
+  if (!visible) $('btn-return').hidden = true;
+}
+
+/**
+ * Кнопка «Вернуть на визитку» (Ф21).
+ * @param {'hidden'|'ready'|'waiting'} state  waiting — маркера нет в кадре, кнопка приглушена
+ */
+export function setReturnButton(state) {
+  const button = $('btn-return');
+  button.hidden = state === 'hidden';
+  button.classList.toggle('is-waiting', state === 'waiting');
 }
 
 export function openContacts() {

@@ -45,10 +45,11 @@ export function performAction(contact, config) {
  * @param {ReturnType<typeof import('./animations.js').createCardAnimator>} options.animator
  * @param {import('./config.js').CardConfig} options.config
  * @param {() => boolean} [options.isActive]  false — визитка скрыта, нажатия игнорируются
+ * @param {() => boolean} [options.onCardTap]  своя обработка нажатия на визитку; true — обычный переворот не нужен
  * @param {(flipped: boolean) => void} [options.onFlip]
  * @param {(contact: import('./config.js').Contact) => void} [options.onAction]
  */
-export function createInteraction({ element, camera, card, animator, config, isActive = () => true, onFlip, onAction }) {
+export function createInteraction({ element, camera, card, animator, config, isActive = () => true, onCardTap, onFlip, onAction }) {
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
   const buttonMeshes = card.buttons.map((button) => button.mesh);
@@ -112,7 +113,7 @@ export function createInteraction({ element, camera, card, animator, config, isA
       highlightTimer = setTimeout(() => card.setHighlight(null), HIGHLIGHT_TIME);
       performAction(hit.contact, config);
       onAction?.(hit.contact);
-    } else if (animator.flip()) {
+    } else if (!onCardTap?.() && animator.flip()) {
       onFlip?.(animator.isFlipped);
     }
   }

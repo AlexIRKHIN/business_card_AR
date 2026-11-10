@@ -5,14 +5,25 @@ import { loadConfig, ConfigError } from './config.js';
 import * as ui from './ui.js';
 
 const params = new URLSearchParams(location.search);
-const SCAN_HINT = 'Наведите камеру на визитку';
-const FLIP_HINT = 'Нажмите на визитку, чтобы увидеть контакты';
 
-/** Состояние сцены, от которого зависит подсказка на экране. */
-const sceneState = {
-  tracking: true,      // маркер в кадре (в предпросмотре всегда true)
-  flippedOnce: false,  // пользователь уже переворачивал визитку
+const HINTS = {
+  scan: 'Наведите камеру на визитку',
+  open: 'Нажмите на визитку, чтобы открыть контакты',
+  flip: 'Нажмите на визитку, чтобы увидеть контакты',
+  gestures: 'Один палец — вращение, два — масштаб',
 };
+const GESTURE_HINT_TIME = 5000; // миллисекунд
+
+/** Состояние сцены, от которого зависят подсказка и кнопка возврата. */
+const sceneState = {
+  mode: 'preview',       // 'preview' | 'scanning' | 'marker' | 'hand'
+  markerVisible: false,
+  flippedOnce: false,    // пользователь уже видел обратную сторону
+  gestureHintUntil: 0,   // до какого момента показывать подсказку про жесты
+};
+
+/** Запущенный AR-режим (нужен кнопке «Вернуть на визитку»). */
+let arSession = null;
 
 boot();
 
@@ -31,7 +42,10 @@ async function boot() {
     return;
   }
 
-  ui.initUI(config, { onStartCamera: () => startCamera(config) });
+  ui.initUI(config, {
+    onStartCamera: () => startCamera(config),
+    onReturn: returnToMarker,
+  });
 
   if (params.has('preview')) await startPreview(config);
   else ui.showScreen('start');
@@ -62,8 +76,8 @@ async function startCamera(config) {
   ui.setCameraButtonBusy(true);
   try {
     const { startAR } = await import('./ar.js');
-    sceneState.tracking = false;
-    await startAR(config, document.getElementById('ar-container'), sceneHandlers());
+    sceneState.mode = 'scanning';
+    arSession = await startAR(config, document.getElementById('ar-container'), sceneHandlers());
   } catch (error) {
     console.error(error);
     ui.setCameraButtonBusy(false);
@@ -97,31 +111,45 @@ async function startPreview(config) {
 function showScene() {
   ui.showScreen(null);
   ui.setSceneControlsVisible(true);
-  refreshHint();
+  refreshSceneUI();
 }
 
-/** Подсказка по состоянию сцены (Ф6, Ф14). */
-function refreshHint() {
-  if (!sceneState.tracking) ui.setHint(SCAN_HINT);
-  else if (!sceneState.flippedOnce) ui.setHint(FLIP_HINT);
-  else ui.setHint(null);
+/** Кнопка «Вернуть на визитку» (Ф21). */
+function returnToMarker() {
+  if (!arSession?.returnToMarker()) ui.showToast('Наведите камеру на печатную визитку, чтобы вернуть на неё 3D-визитку.');
+}
+
+/** Подсказка и кнопка возврата по состоянию сцены (Ф6, Ф14, Ф21). */
+function refreshSceneUI() {
+  const { mode, markerVisible, flippedOnce, gestureHintUntil } = sceneState;
+
+  let hint = null;
+  if (mode === 'scanning') hint = HINTS.scan;
+  else if (mode === 'marker') hint = HINTS.open;
+  else if (!flippedOnce) hint = HINTS.flip;
+  else if (performance.now() < gestureHintUntil) hint = HINTS.gestures;
+  ui.setHint(hint);
+
+  ui.setReturnButton(mode === 'hand' ? (markerVisible ? 'ready' : 'waiting') : 'hidden');
 }
 
 /** Реакция интерфейса на события 3D-визитки; общая для предпросмотра и AR. */
 function sceneHandlers() {
   return {
-    onTargetFound() {
-      sceneState.tracking = true;
-      refreshHint();
-    },
-    onTargetLost() {
-      sceneState.tracking = false;
-      refreshHint();
+    onState({ mode, markerVisible }) {
+      sceneState.mode = mode;
+      sceneState.markerVisible = markerVisible;
+      refreshSceneUI();
     },
     onFlip() {
-      // Подсказка про оборот нужна только до первого переворота (Ф6)
-      sceneState.flippedOnce = true;
-      refreshHint();
+      // После первого переворота подсказка про оборот больше не нужна (Ф6);
+      // вместо неё на несколько секунд появляется подсказка про жесты
+      if (!sceneState.flippedOnce) {
+        sceneState.flippedOnce = true;
+        sceneState.gestureHintUntil = performance.now() + GESTURE_HINT_TIME;
+        setTimeout(refreshSceneUI, GESTURE_HINT_TIME + 50);
+      }
+      refreshSceneUI();
     },
     onAction(contact) {
       if (contact.id === 'vcard') ui.showToast(ui.VCARD_TOAST);
