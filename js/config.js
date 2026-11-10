@@ -45,7 +45,8 @@ export async function loadConfig(url = 'config.json') {
  * @property {string} name
  * @property {string} role
  * @property {string} monogram
- * @property {string} accent
+ * @property {string} accent    цвет акцента (#rrggbb)
+ * @property {string} onAccent  цвет текста, читаемый на акценте
  * @property {Contact[]} contacts
  */
 export function normalizeConfig(raw) {
@@ -68,11 +69,13 @@ export function normalizeConfig(raw) {
   // Кнопка «Сохранить контакт» есть всегда: для vCard достаточно имени.
   contacts.push({ id: 'vcard', label: 'Сохранить контакт', display: 'Файл .vcf для телефонной книги' });
 
+  const accent = normalizeAccent(raw.theme?.accent);
   return {
     name,
     role: text(raw.role),
     monogram: makeMonogram(name),
-    accent: normalizeAccent(raw.theme?.accent),
+    accent,
+    onAccent: contrastColor(accent),
     contacts,
   };
 }
@@ -94,6 +97,13 @@ function text(value) {
 function normalizeAccent(value) {
   const color = text(value);
   return /^#[0-9a-f]{6}$/i.test(color) ? color.toLowerCase() : DEFAULT_ACCENT;
+}
+
+/** Тёмный или белый текст в зависимости от яркости фона. */
+function contrastColor(hex) {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.62 ? '#0b0f17' : '#ffffff';
 }
 
 function phoneContact(value) {

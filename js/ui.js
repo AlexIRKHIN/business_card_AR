@@ -14,7 +14,7 @@ let toastTimer = 0;
  * @param {{ onStartCamera: () => void }} handlers
  */
 export function initUI(config, { onStartCamera }) {
-  applyTheme(config.accent);
+  applyTheme(config);
   document.title = `${config.name} — AR-визитка`;
 
   $('start-monogram').textContent = config.monogram;
@@ -44,12 +44,10 @@ export function initErrorScreen() {
 }
 
 /** Цвет акцента из конфига и подходящий по контрасту цвет текста на нём (Ф12). */
-function applyTheme(accent) {
-  const [r, g, b] = [1, 3, 5].map((i) => parseInt(accent.slice(i, i + 2), 16));
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+function applyTheme(config) {
   const root = document.documentElement.style;
-  root.setProperty('--accent', accent);
-  root.setProperty('--on-accent', luminance > 0.62 ? '#0b0f17' : '#ffffff');
+  root.setProperty('--accent', config.accent);
+  root.setProperty('--on-accent', config.onAccent);
 }
 
 /** Строит список кнопок контактов по данным конфига (Ф11, Ф13). */
@@ -122,9 +120,10 @@ export function setHint(message) {
   hint.textContent = message ?? '';
 }
 
-/** Показывает или скрывает кнопку «Контакты» поверх камеры. */
-export function setContactsButtonVisible(visible) {
+/** Показывает или скрывает кнопки поверх сцены: «Контакты» и «На главную». */
+export function setSceneControlsVisible(visible) {
   $('fab-contacts').hidden = !visible;
+  $('btn-exit').hidden = !visible;
 }
 
 export function openContacts() {

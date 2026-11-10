@@ -69,6 +69,18 @@ html, body {
   overflow: hidden;
 }
 
+#ar-container.is-preview {
+  background:
+    radial-gradient(90% 60% at 50% 45%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 75%),
+    linear-gradient(var(--line) 1px, transparent 1px) 0 0 / 100% 32px,
+    linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 32px 100%,
+    var(--bg);
+  touch-action: none;
+  cursor: grab;
+}
+#ar-container.is-preview:active { cursor: grabbing; }
+#ar-container canvas { display: block; }
+
 /* ---------- Экраны ---------- */
 .screen {
   position: fixed;
@@ -236,6 +248,26 @@ h2 { font-size: 22px; }
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.chip {
+  position: fixed;
+  z-index: 20;
+  left: 16px;
+  bottom: calc(16px + var(--safe-bottom));
+  min-height: 48px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: rgba(11, 15, 23, 0.78);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
 }
 
 /* ---------- Резервная панель контактов ---------- */

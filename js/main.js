@@ -24,9 +24,9 @@ async function boot() {
   }
 
   ui.initUI(config, { onStartCamera: () => startCamera(config) });
-  ui.showScreen('start');
 
-  if (params.has('preview')) startPreview(config);
+  if (params.has('preview')) await startPreview(config);
+  else ui.showScreen('start');
 }
 
 /**
@@ -55,7 +55,21 @@ async function startCamera(config) {
   ui.showToast('AR-режим появится на следующих этапах разработки. Пока доступны контакты без камеры.');
 }
 
-function startPreview(config) {
-  // Часть 2 плана: здесь подключается сцена Three.js с 3D-визиткой без камеры.
-  ui.showToast('Предпросмотр 3D-визитки появится на следующем этапе разработки.');
+/** Режим предпросмотра без камеры (Ф16). Модули 3D загружаются только здесь. */
+async function startPreview(config) {
+  ui.showScreen('loader');
+  try {
+    const { startPreview: run } = await import('./preview.js');
+    await run(config, document.getElementById('ar-container'));
+  } catch (error) {
+    console.error(error);
+    ui.showError(
+      'Не удалось показать 3D-визитку',
+      'Похоже, браузер или устройство не поддерживает 3D-графику (WebGL). Контакты можно посмотреть и без неё.',
+    );
+    return;
+  }
+  ui.showScreen(null);
+  ui.setSceneControlsVisible(true);
+  ui.setHint('Потяните, чтобы повернуть визитку');
 }
