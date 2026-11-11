@@ -493,6 +493,12 @@ svg path { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: 
   .gesture-help span { display: none; }
 }
 
+/* В горизонтальной ориентации кнопка смены режима опускается в нижний ряд,
+   между «На главную» и «Контакты», чтобы не закрывать визитку */
+@media (max-height: 520px) and (min-width: 520px) {
+  .chip-center { bottom: calc(16px + var(--safe-bottom)); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
